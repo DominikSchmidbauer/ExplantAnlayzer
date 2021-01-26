@@ -10,3 +10,7 @@ All intersections of the boundary of the dilated explant are regarded as startin
 Finally, the adjecancy matrix is converted to a graph, which is then converted to a tree using structure shortest pathlength. 
 Binarized image, sekeleton, graph and tree are then saved for each explant. 
 For control of filtering, binarization and skeletionization, a JPEG image is saved. Use batch.m to call this function.
+
+Dominik Schmidbauer, Medical University Innsbruck
+dominik.schmidbauer@i-med.ac.at
+Version 1.0
