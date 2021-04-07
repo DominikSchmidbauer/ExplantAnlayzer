@@ -1,67 +1,98 @@
 %%  Batch
 
-%   This script processes a set of images by calling the explantanalysis function. 
-%   First, set parameters for image processing, 
-%   then select a folder which contains all images to be analysed.
+%   This script processes all images in a folder by calling the 
+%   ExplantAnalyzer function.
+%   First, set the parameters for image processing,
+%   then run the script and select a folder which contains all images 
+%   to be analyzed.
 
 %   Dominik Schmidbauer, Medical University Innsbruck
-%   dominik.schmidbauer@i-med.ac.at 
+%   dominik.schmidbauer@i-med.ac.at
 %   Version 1.0
+
+%% Clear command window and variables for a better overview
+clear all
+clc
 
 %% Set values for image processing
 
-global setup voxel_size explant_dil_factor high_boost median_size...
-    neighborhood_size neurite_smooth_size spur_removal  
+global setup voxel_size explant_dil_factor bg_sub high_boost median_size...
+    neighborhood_size neurite_smooth_size spur_removal
 
-% If setup == 1 then an overview image will be opened for each major processing 
-% step to facilitate parameter optimization
-setup =                1;
+% If setup == 1 then an overview image will be opened, containing a image 
+% of each major processing step to facilitate parameter optimization.
+setup =                 0;
 
-% Pixel/voxelsize in µm
+% Pixel/voxelsize in µm. 
 voxel_size =            0.328;
 
-% Size of structuring element in µm for dilation of the explant
+% Background subtraction. If 0 then the median is used, 
+% otherwise the specified value is used.
+bg_sub =                0;
+
+% Size of structuring element in µm for the dilation of the explant.
 explant_dil_factor =    25      / voxel_size;
 
-% Center value of high boost filter
+% Center value of the high boost filter.
 high_boost =            20;
 
-% Size of median filter
+% Size of the median filter.
 median_size =           [3 3];
 
-% Neighborhood size in µm for adaptive thresholding
-neighborhood_size =     60      / voxel_size;
+% Neighborhood size in µm for adaptive thresholding.
+neighborhood_size =     65      / voxel_size;
 
-% Size of structuring element for smoothing neurites by erosion an dilation
+% Size of the structuring element for smoothing neurites by erosion an
+% dilation.
 neurite_smooth_size =   1.5      / voxel_size;
 
-% Length of spurs in µm to be removed
-spur_removal =          15      / voxel_size;
+% Length of spurs in µm to be removed.
+spur_removal =          10      / voxel_size;
 
 %% Start batch
 
-% Add current path
+% Add current path.
 addpath(pwd);
 
-% Select the folder containg the images to be analysed
+% Select the folder containing the images to be analyzed.
 selpath = uigetdir;
 cd(selpath);
 
-% Find all TIFF images
+% Find all TIFF images. Change to '*.tif' if necessary.
 listing = dir('*.tiff');
 
-% Loop all images
+% Initialize error counter.
+err_count = 0;
+
+% Start timer for the total time.
+total = tic;
+
+% Loop all images.
 for i = 1:size(listing,1)
     
-    % Start timer
-    tic
+    try
+        
+        % Start timer for one explant.
+        tic
+        
+        % Run ExplantAnalyzer.
+        ExplantAnalyzer(listing(i).name);
+        
+        % Stop timer.
+        t = toc;
+        
+        fprintf(1, ['Finished explant ',num2str(i),' of ', num2str(size(listing,1)),' in ',num2str(t),' s\n']);
     
-    % Run explantanalysis
-    explantanalysis(listing(i).name);
-    
-    % Display elapsed time
-    t = toc;
-    status = ['Finished explant ',num2str(i),' of ', num2str(size(listing,1)),' in ',num2str(t),' s'];
-    disp(status)
+    catch E
+        
+        % Print error message in case an error occurs.
+        fprintf(2, ['Processing explant ',num2str(listing(i).name),' caused an error.\n\n']);
+        fprintf(2, '%s\n\n', getReport(E, 'extended'));
+        err_count = err_count + 1;
+        
+    end
     
 end
+
+% Print final outcome.
+fprintf(2,'\nBatch finished in %.0f s! %d error(s) occurred!\n', toc(total), err_count);
