@@ -3,7 +3,7 @@
 %   This script processes all images in a folder by calling the 
 %   ExplantAnalyzer function.
 %   First, set the parameters for image processing,
-%   then run the script and select a folder which contains all images 
+%   then run the script and select a folder containing all images 
 %   to be analyzed.
 
 %   Dominik Schmidbauer, Medical University Innsbruck
@@ -17,7 +17,7 @@ clc
 %% Set values for image processing
 
 global setup voxel_size explant_dil_factor bg_sub high_boost median_size...
-    neighborhood_size neurite_smooth_size spur_removal
+    neighborhood_size sensitivity neurite_smooth_size spur_removal
 
 % If setup == 1 then an overview image will be opened, containing a image 
 % of each major processing step to facilitate parameter optimization.
@@ -28,7 +28,7 @@ voxel_size =            0.328;
 
 % Background subtraction. If 0 then the median is used, 
 % otherwise the specified value is used.
-bg_sub =                0;
+bg_sub =                1300;
 
 % Size of structuring element in µm for the dilation of the explant.
 explant_dil_factor =    25      / voxel_size;
@@ -42,7 +42,14 @@ median_size =           [3 3];
 % Neighborhood size in µm for adaptive thresholding.
 neighborhood_size =     65      / voxel_size;
 
-% Size of the structuring element for smoothing neurites by erosion an
+% Determine which pixels get thresholded as foreground pixels, 
+% specified as a number in the range [0, 1]. High sensitivity values lead 
+% to thresholding more pixels as foreground, at the risk of including 
+% some background pixels. Does not need to be changed usually. Default is
+% 0.5.
+sensitivity =           0.5;
+
+% Size of the structuring element for smoothing neurites by erosion and
 % dilation.
 neurite_smooth_size =   1.5      / voxel_size;
 

@@ -3,14 +3,14 @@
 % Just open a .mat file and run this script. The graph will be plotted on
 % top of the binarized neurites. 
 
-% Orange lines:     backtracked tree graph
-% Blue lines:       original graph
+% Orange lines:     Backtracked tree graph
+% Blue lines:       Original graph
 % Dashed lines:     Zero length connection lines to
 % Orange dot:       Virtual center-point
-% Red crosses:      end-points
-% Green crosses:    start-points
-% Blue Xs:          branch-points
-% Green line:       dilated explant boundary
+% Red crosses:      End-points
+% Green crosses:    Start-points
+% Blue Xs:          Branch-points
+% Green line:       Dilated explant boundary
 
 %   Dominik Schmidbauer, Medical University Innsbruck
 %   dominik.schmidbauer@i-med.ac.at

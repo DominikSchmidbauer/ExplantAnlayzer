@@ -2,7 +2,7 @@
 
 %   This function processes images of outgrown (spiral ganglion) explants
 %   stained for beta-III-tubulin and DAPI. The input image has to be a
-%   16bit RGB image, containing the beta III tubulin staining in channel 1
+%   16-bit RGB image, containing the beta-III-tubulin staining in channel 1
 %   (red) and the DAPI staining in channel 3 (blue). The beta-III-tubulin
 %   channel is filtered, binarized by adaptive thresholding and
 %   skeletonized. 
@@ -14,11 +14,11 @@
 
 %   Each edge of the adjacency matrix is weighted by its Euclidean length.
 %   All intersections of the boundary of the dilated explant are regarded
-%   as start-points and are connected to a central node with a weight of
+%   as start-points and are connected to a center-node with a weight of
 %   zero. Subsequently, the adjacancy matrix is converted to a graph. The 
 %   end-points of this graph are then backtracked to the center-node.
 %   Binarized image, skeleton, graph and tree are then saved for each 
-%   explant. For evaluating filtering, binarization and skeletonization, 
+%   explant. To evaluate filtering, binarization and skeletonization, 
 %   a JPEG image is saved. Use batch.m to call this function.
 
 %   Dominik Schmidbauer, Medical University Innsbruck
@@ -29,17 +29,17 @@
 function [] = ExplantAnalyzer (input_image)
 
 global setup voxel_size explant_dil_factor bg_sub high_boost median_size...
-    neighborhood_size neurite_smooth_size spur_removal
+    neighborhood_size sensitivity neurite_smooth_size spur_removal
 
 set(0,'DefaultTextInterpreter','none');
 
 %% Read image
 
 % Open image and extract channels.
-image =         imread(input_image);
-[~, name, ~] =  fileparts(input_image);
-b3(:,:,1) =     image(:, :, 1);
-dapi(:,:,1) =   image(:, :, 3);
+image =             imread(input_image);
+[~, name, ~] =      fileparts(input_image);
+b3(:,:,1) =         image(:, :, 1);
+dapi(:,:,1) =       image(:, :, 3);
 
 %% Filter image
 
@@ -59,7 +59,7 @@ explant_dil_2 =     imdilate(explant, strel('disk', round(explant_dil_factor) * 
 if bg_sub == 0
     b3_sub =        imadjust(b3, [(double(median(b3(:)))/2^16) 1]);
 else
-    b3_sub =        imadjust(b3, [bg_sub 1]);
+    b3_sub =        imadjust(b3, [bg_sub/2^16 1]);
 end
 
 % Calculate possible predictors for neuron density within the explant.
@@ -68,12 +68,12 @@ b3_dapi_mean_explant =      sum(im2uint16(mean(cat(3,dapi,b3_sub),3) ./ 65535) .
 b3_sum_explant =            sum(b3_sub .* (im2uint16(explant) ./ 65535), 'all');
 
 % Apply a high boost filter.
-kernel =        -1 * ones(3);
-kernel(2,2) =   high_boost;
-b3_en =         imfilter(b3_sub, kernel);
+kernel =            -1 * ones(3);
+kernel(2,2) =       high_boost;
+b3_en =             imfilter(b3_sub, kernel);
 
 % Apply a median filter.
-b3_filt =       medfilt2(b3_en, median_size);
+b3_filt =           medfilt2(b3_en, median_size);
 
 % Round neighborhood size to an uneven integer.
 if mod(round(neighborhood_size),2) == 0
@@ -85,7 +85,7 @@ end
 % Binarize by adaptive thresholding.
 % Explant is subtracted beforehand to achieve a higher sensitivity in the
 % close vicinity of the explant.
-T =             adaptthresh(b3_filt .* uint16(~explant_dil_1),...
+T =             adaptthresh(b3_filt .* uint16(~explant_dil_1), sensitivity,...
     'NeighborhoodSize', neighborhood_size, 'Statistic', 'mean');
 b3_bw =         imbinarize(b3_filt .* uint16(~explant_dil_1), T);
 
@@ -94,8 +94,7 @@ b3_bw =         imbinarize(b3_filt .* uint16(~explant_dil_1), T);
 neurites =      bwareafilt(b3_bw | explant_dil_1, 1) &~ explant_dil_1;
 
 % Smooth neurites for a cleaner skeleton.
-neurites =      imdilate(neurites, strel('disk', round(neurite_smooth_size)));
-neurites =      imerode(neurites, strel('disk', round(neurite_smooth_size)));
+neurites =      imclose(neurites, strel('disk', round(neurite_smooth_size)));
 
 % Skeletonize image. The second skeletonization is necessary as otherwise
 % branchpoints would be recognized where spurs were removed.
