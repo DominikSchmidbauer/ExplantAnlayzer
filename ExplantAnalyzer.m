@@ -93,12 +93,12 @@ b3_bw =         imbinarize(b3_filt .* uint16(~explant_dil_1), T);
 % otherwise unconnected blobs.
 neurites =      bwareafilt(b3_bw | explant_dil_1, 1) &~ explant_dil_1;
 
-% Smooth neurites for a cleaner skeleton.
-neurites =      imclose(neurites, strel('disk', round(neurite_smooth_size)));
-
 % Compute total area and convex hull area of neurites
 hull_area =     regionprops(neurites | explant_dil_1,'ConvexArea').ConvexArea * (voxel_size^2);
-neurites_area =  sum(neurites,'all') * (voxel_size^2);
+neurites_area = sum(neurites,'all') * (voxel_size^2);
+
+% Smooth neurites for a cleaner skeleton.
+neurites =      imclose(neurites, strel('disk', round(neurite_smooth_size)));
 
 % Skeletonize image. The second skeletonization is necessary as otherwise
 % branchpoints would be recognized where spurs were removed.
