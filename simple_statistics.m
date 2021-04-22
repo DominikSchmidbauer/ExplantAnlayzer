@@ -15,7 +15,7 @@ clear all
 % Add current path.
 addpath(pwd);
 
-% Select folder contaning the MAT files.
+% Select folder containing the MAT files.
 selpath = uigetdir;
 cd(selpath)
 
@@ -46,6 +46,8 @@ for i = 1:size(listing,1)
     Samples(i).Total_Length_TR =            sum(TR.Edges.Weight);
     Samples(i).Sum_Lengths_TR =             sum(D);
     Samples(i).Explant_Size =               explant_size;
+    Samples(i).Hull_Area =                  hull_area;    
+    Samples(i).Neurites_Area =              neurites_area;    
     Samples(i).Sholl_Curve_X =              sort(D,'ascend');
     Samples(i).Sholl_Curve_Y =              (length(D):-1:1).';
     Samples(i).b3_dapi_multi_explant =      b3_dapi_multi_explant;

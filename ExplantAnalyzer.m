@@ -15,7 +15,7 @@
 %   Each edge of the adjacency matrix is weighted by its Euclidean length.
 %   All intersections of the boundary of the dilated explant are regarded
 %   as start-points and are connected to a center-node with a weight of
-%   zero. Subsequently, the adjacancy matrix is converted to a graph. The 
+%   zero. Subsequently, the adjacency matrix is converted to a graph. The 
 %   end-points of this graph are then backtracked to the center-node.
 %   Binarized image, skeleton, graph and tree are then saved for each 
 %   explant. To evaluate filtering, binarization and skeletonization, 
@@ -96,6 +96,10 @@ neurites =      bwareafilt(b3_bw | explant_dil_1, 1) &~ explant_dil_1;
 % Smooth neurites for a cleaner skeleton.
 neurites =      imclose(neurites, strel('disk', round(neurite_smooth_size)));
 
+% Compute total area and convex hull area of neurites
+hull_area =     regionprops(neurites | explant_dil_1,'ConvexArea').ConvexArea * (voxel_size^2);
+neurites_area =  sum(neurites,'all') * (voxel_size^2);
+
 % Skeletonize image. The second skeletonization is necessary as otherwise
 % branchpoints would be recognized where spurs were removed.
 skel =          bwskel(neurites, 'MinBranchLength', round(spur_removal));
@@ -147,7 +151,7 @@ node =      struct2table(node);
 % Loop every branch.
 for i = 1:length(link)
     
-    % Extract indicies of all points along the branch.
+    % Extract indices of all points along the branch.
     I =         link(i).point;
     
     % If the edge length is only one pixel, skip this edge, because
@@ -355,8 +359,8 @@ if setup == 1
 end
 
 %% Save everything to one .mat file
-save([name '.mat'], 'G', 'TR', 'D', 'skel', 'neurites', 'explant',...
-    'explant_dil_1', 'explant_dil_2', 'explant_size',...
+save([name '.mat'], 'G', 'TR', 'D', 'skel', 'neurites', 'hull_area',...
+    'neurites_area', 'explant', 'explant_dil_1', 'explant_dil_2', 'explant_size',...
     'b3_dapi_multi_explant', 'b3_dapi_mean_explant', 'b3_sum_explant')
 
 end

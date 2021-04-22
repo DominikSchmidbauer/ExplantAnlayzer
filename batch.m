@@ -19,7 +19,7 @@ clc
 global setup voxel_size explant_dil_factor bg_sub high_boost median_size...
     neighborhood_size sensitivity neurite_smooth_size spur_removal
 
-% If setup == 1 then an overview image will be opened, containing a image 
+% If setup == 1 then an overview image will be opened, containing an image 
 % of each major processing step to facilitate parameter optimization.
 setup =                 0;
 
