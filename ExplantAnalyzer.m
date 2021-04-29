@@ -23,7 +23,7 @@
 
 %   Dominik Schmidbauer, Medical University Innsbruck
 %   dominik.schmidbauer@i-med.ac.at
-%   Version 1.0
+%   Version 1.1
 
 %% Function
 function [] = ExplantAnalyzer (input_image)
@@ -93,9 +93,10 @@ b3_bw =         imbinarize(b3_filt .* uint16(~explant_dil_1), T);
 % otherwise unconnected blobs.
 neurites =      bwareafilt(b3_bw | explant_dil_1, 1) &~ explant_dil_1;
 
-% Compute total area and convex hull area of neurites
+% Compute total area, convex hull area and covered area of neurites
 hull_area =     regionprops(neurites | explant_dil_1,'ConvexArea').ConvexArea * (voxel_size^2);
 neurites_area = sum(neurites,'all') * (voxel_size^2);
+covered_area =  sum((imfill(neurites | explant_dil_2,'holes') &~ explant_dil_2),'all') * (voxel_size^2);
 
 % Smooth neurites for a cleaner skeleton.
 neurites =      imclose(neurites, strel('disk', round(neurite_smooth_size)));
@@ -360,7 +361,8 @@ end
 
 %% Save everything to one .mat file
 save([name '.mat'], 'G', 'TR', 'D', 'skel', 'neurites', 'hull_area',...
-    'neurites_area', 'explant', 'explant_dil_1', 'explant_dil_2', 'explant_size',...
-    'b3_dapi_multi_explant', 'b3_dapi_mean_explant', 'b3_sum_explant')
+    'neurites_area', 'covered_area', 'explant', 'explant_dil_1',... 
+    'explant_dil_2', 'explant_size', 'b3_dapi_multi_explant',...
+    'b3_dapi_mean_explant', 'b3_sum_explant')
 
 end
