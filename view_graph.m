@@ -1,7 +1,7 @@
 %% Script to view graph after processing.
 
 % Just open a .mat file and run this script. The graph will be plotted on
-% top of the binarized neurites. 
+% top of the binarized neurites.
 
 % Orange lines:     Backtracked tree graph
 % Blue lines:       Original graph
@@ -54,11 +54,14 @@ a = find(indegree(TR) > 1);
 a = a(1:length(a) - 1);
 highlight(h, a, 'NodeColor', ([0 114 178] / 255), 'MarkerSize', 10, 'Marker', 'x')
 
-b = TR.Edges.EndNodes(TR.Edges.Weight == 0, 1:2);
-highlight(h, b(:,1), b(:,2), 'LineWidth', 0.5, 'LineStyle','--')
-highlight(h, b(:,1), 'NodeColor', ([0 158 115] / 255), 'MarkerSize', 10, 'Marker', '+')
-
-c = G.Edges.EndNodes(G.Edges.Weight == 0, 1:2);
-highlight(g, c(:,1), c(:,2), 'LineWidth', 0.5, 'LineStyle','--')
+b = TR.Edges.EndNodes(TR.Edges.Weight == 0, 1:2);     
 
 highlight(h, find(TR.Nodes.ep==1), 'NodeColor', ([184 40 40] / 255), 'MarkerSize', 10, 'Marker', '+')
+
+ep_list = TR.Nodes(TR.Nodes.('ep')==1,:);
+
+for i = 1:height(ep_list)
+         
+    text(ep_list.('comy')(i), ep_list.('comx')(i) - 50, sprintf('EP%i %.2fµm',i,D(i)),'Color', [1 0 0], 'FontSize', 8, 'FontWeight', 'bold', 'HorizontalAlignment', 'Center')
+    
+end
