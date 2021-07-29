@@ -8,7 +8,7 @@
 
 %   Dominik Schmidbauer, Medical University Innsbruck
 %   dominik.schmidbauer@i-med.ac.at
-%   Version 1.0
+%   Version 1.1
 
 %% Clear command window and variables for a better overview
 clear all
@@ -16,7 +16,7 @@ clc
 
 %% Set values for image processing
 
-global setup voxel_size explant_dil_factor bg_sub high_boost median_size...
+global setup voxel_size explant_dil_value bg_sub high_boost median_size...
     neighborhood_size sensitivity neurite_smooth_size spur_removal
 
 % If setup == 1 then an overview image will be opened, containing an image 
@@ -31,7 +31,7 @@ voxel_size =            0.328;
 bg_sub =                1300;
 
 % Size of structuring element in µm for the dilation of the explant.
-explant_dil_factor =    25      / voxel_size;
+explant_dil_value =    25      / voxel_size;
 
 % Center value of the high boost filter.
 high_boost =            20;
@@ -54,7 +54,7 @@ sensitivity =           0.5;
 neurite_smooth_size =   1.5      / voxel_size;
 
 % Length of spurs in µm to be removed.
-spur_removal =          10      / voxel_size;
+spur_removal =          6      / voxel_size;
 
 %% Start batch
 

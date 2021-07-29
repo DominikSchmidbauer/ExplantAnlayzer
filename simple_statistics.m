@@ -7,10 +7,18 @@
 
 %   Dominik Schmidbauer, Medical University Innsbruck
 %   dominik.schmidbauer@i-med.ac.at
-%   Version 1.0
+%   Version 1.2
 
 %%
 clear all
+
+% Pixel/voxelsize in µm. 
+voxel_size =        0.328;
+
+% Distance between the Sholl rings in µm.
+% If sholl_distance = 0 then no Sholl analysis will be performed.
+% Time consuming step!
+sholl_distance =    0          / voxel_size;
 
 % Add current path.
 addpath(pwd);
@@ -46,11 +54,9 @@ for i = 1:size(listing,1)
     Samples(i).Total_Length_TR =            sum(TR.Edges.Weight);
     Samples(i).Sum_Lengths_TR =             sum(D);
     Samples(i).Explant_Size =               explant_size;
-    Samples(i).Hull_Area =                  hull_area;    
+    Samples(i).Hull_Area =                  hull_area;
     Samples(i).Neurites_Area =              neurites_area;
     Samples(i).Covered_Area =               covered_area;
-    Samples(i).Sholl_Curve_X =              sort(D,'ascend');
-    Samples(i).Sholl_Curve_Y =              (length(D):-1:1).';
     Samples(i).b3_dapi_multi_explant =      b3_dapi_multi_explant;
     Samples(i).b3_dapi_mean_explant =       b3_dapi_mean_explant;
     Samples(i).b3_sum_explant =             b3_sum_explant;
@@ -70,10 +76,69 @@ for i = 1:size(listing,1)
         % Extract start-point coordinates. X and Y are switched.
         sp_y =  TR.Nodes.comx(D(length(D) - 1));
         sp_x =  TR.Nodes.comy(D(length(D) - 1));
-
-        % Calculate clockwise angle between vector from start-point to 
+        
+        % Calculate clockwise angle between vector from start-point to
         % end-point and a vector facing North (here: negative y axis).
         Samples(i).Neurite_Angles(k,1) = wrapTo360(atan2d ((ep_x - sp_x), (sp_y - ep_y)));
+        
+    end
+    
+     %% Sholl analysis
+     % Performe a simple Sholl analysis.
+    if sholl_distance > 0
+        
+        % Start at the centroid of the explant.
+        stats =     regionprops(explant,'Centroid');
+        y =         stats.Centroid(1);
+        x =         stats.Centroid(2);
+        
+        % Calculate the minimum and the maximum distance for the analysis
+        explant_boundary =  bwboundaries(explant,'noholes');
+        explant_boundary =  explant_boundary{1};
+        neurites_boundary = bwboundaries(neurites,'noholes');
+        neurites_boundary = vertcat(neurites_boundary{:});
+        min_radius =        max(sqrt((explant_boundary(:,1) - x).^2 + (explant_boundary(:,2) - y).^2));
+        max_radius =        max(sqrt((neurites_boundary(:,1) - x).^2 + (neurites_boundary(:,2) - y).^2));
+        
+        % Setup
+        [size_y, size_x] =              size(explant);
+        [columnsInImage, rowsInImage] = meshgrid(1:size_x, 1:size_y);
+        all_circles =                   logical(zeros(size(explant)));
+        
+        k = 1;
+        
+        % Step from min to max radius 
+        for d = min_radius : sholl_distance : max_radius
+            
+            % Generate a disk with current size
+            disk_pixels = (rowsInImage - x).^2 + (columnsInImage - y).^2 <= d.^2;
+            
+            % Extract boundary, remove indices ouside the image and
+            % generate a binary image of the circle
+            circle_pixels =             bwboundaries(disk_pixels, 4, 'noholes');
+            circle_pixels =             circle_pixels{1};
+            circle_pixels(circle_pixels(:,1) > size_y , :) = [];
+            circle_pixels(circle_pixels(:,2) > size_x , :) = [];
+            circle_pixels_idx =         sub2ind(size(explant), circle_pixels(:,1), circle_pixels(:,2));
+            circle =                    logical(zeros(size(explant)));
+            circle(circle_pixels_idx) = 1;
+            
+            % Generate image with all circles
+            all_circles(circle_pixels_idx) = 1;
+            
+            % Find intersections of circle and neurites.
+            % Save intersection and total pixel counts.
+            intersections =                             circle & neurites;
+            Samples(i).Sholl_Distance(k,1) =            round((d - min_radius) * voxel_size);
+            Samples(i).Sholl_Pixels(k,1)  =             sum(intersections,'all');
+            [~, Samples(i).Sholl_Intersections(k,1)] =  bwlabel(intersections);
+            
+            k = k+1;
+        end
+        
+%       % Graphical output of Sholl analysis
+%         figure
+%         imshow(all_circles | neurites | explant)
         
     end
     
@@ -81,8 +146,8 @@ end
 
 %% Remove all explants with a total outgrowth less than 1 mm
 
-idx = find(vertcat(Samples.Total_Length_G) < 1000);
-Samples(idx) = [];
+% idx = find(vertcat(Samples.Total_Length_G) < 1000);
+% Samples(idx) = [];
 
 %%
 clearvars -except Samples

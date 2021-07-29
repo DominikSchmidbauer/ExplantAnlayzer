@@ -23,12 +23,12 @@
 
 %   Dominik Schmidbauer, Medical University Innsbruck
 %   dominik.schmidbauer@i-med.ac.at
-%   Version 1.1
+%   Version 1.2
 
 %% Function
 function [] = ExplantAnalyzer (input_image)
 
-global setup voxel_size explant_dil_factor bg_sub high_boost median_size...
+global setup voxel_size explant_dil_value bg_sub high_boost median_size...
     neighborhood_size sensitivity neurite_smooth_size spur_removal
 
 set(0,'DefaultTextInterpreter','none');
@@ -52,8 +52,8 @@ explant =           imfill(explant, 'holes');
 explant_size =      sum(explant(:)) * voxel_size^2;
 
 % Dilate explant to make sure that its perimeter is larger than the explant.
-explant_dil_1 =     imdilate(explant, strel('disk', round(explant_dil_factor), 8));
-explant_dil_2 =     imdilate(explant, strel('disk', round(explant_dil_factor) * 2, 8));
+explant_dil_1 =     imdilate(explant, strel('disk', round(explant_dil_value), 8));
+explant_dil_2 =     imdilate(explant, strel('disk', round(explant_dil_value) * 2, 8));
 
 % Background subtraction. Use either the median or a defined value.
 if bg_sub == 0
@@ -255,7 +255,7 @@ TR =                subgraph(TR, idx_clean);
 % After evaluating the figure, continue by pressing any key.
 
 if setup == 1
-    
+        
     t = tiledlayout('flow');
     t.TileSpacing = 'none';
     t.Padding = 'none';
@@ -348,7 +348,7 @@ if setup == 1
     highlight(g, c(:,1), c(:,2), 'LineWidth', 0.5, 'LineStyle','--')
     
     highlight(h, find(TR.Nodes.ep==1), 'NodeColor', ([184 40 40] / 255), 'MarkerSize', 10, 'Marker', '+')
-    
+        
     title('Graph')
     
     linkaxes([ax1 ax2 ax3 ax4 ax5 ax6 ax7 ax8 ax9 ax10 ax11 ax12],'xy')
