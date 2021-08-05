@@ -14,4 +14,4 @@ For control of filtering, binarization and skeletionization, a JPEG image is sav
 
 Dominik Schmidbauer, Medical University Innsbruck
 dominik.schmidbauer@i-med.ac.at
-Version 1.0
+Version 1.3
