@@ -8,7 +8,7 @@
 
 %   Dominik Schmidbauer, Medical University Innsbruck
 %   dominik.schmidbauer@i-med.ac.at
-%   Version 1.1
+%   Version 1.2
 
 %% Clear command window and variables for a better overview
 clear all
@@ -31,7 +31,7 @@ voxel_size =            0.328;
 bg_sub =                1300;
 
 % Size of structuring element in µm for the dilation of the explant.
-explant_dil_value =    25      / voxel_size;
+explant_dil_value =    25       / voxel_size;
 
 % Center value of the high boost filter.
 high_boost =            20;
@@ -51,10 +51,10 @@ sensitivity =           0.5;
 
 % Size of the structuring element for smoothing neurites by erosion and
 % dilation.
-neurite_smooth_size =   1.5      / voxel_size;
+neurite_smooth_size =   1.5     / voxel_size;
 
 % Length of spurs in µm to be removed.
-spur_removal =          6      / voxel_size;
+spur_removal =          6       / voxel_size;
 
 %% Start batch
 
@@ -65,8 +65,9 @@ addpath(pwd);
 selpath = uigetdir;
 cd(selpath);
 
-% Find all TIFF images. Change to '*.tif' if necessary.
-listing = dir('*.tiff');
+% Find all .tiff images in the selected folder and all subfolders.
+% Change to '*.tif' if necessary.
+listing = dir('**/*.tiff');
 
 % Initialize error counter.
 err_count = 0;
@@ -82,12 +83,16 @@ for i = 1:size(listing,1)
         % Start timer for one explant.
         tic
         
+        % Go to subfolder
+        cd(listing(i).folder);
+        
         % Run ExplantAnalyzer.
         ExplantAnalyzer(listing(i).name);
         
         % Stop timer.
         t = toc;
         
+        %Print current explant number and time.
         fprintf(1, ['Finished explant ',num2str(i),' of ', num2str(size(listing,1)),' in ',num2str(t),' s\n']);
     
     catch E

@@ -49,7 +49,7 @@ explant =           bwareafilt(dapi_bw, 1);
 explant =           imfill(explant, 'holes');
 
 % Calculate the size of explant.
-explant_size =      sum(explant(:)) * voxel_size^2;
+explant_size =      sum(explant, 'all') * voxel_size^2;
 
 % Dilate explant to make sure that its perimeter is larger than the explant.
 explant_dil_1 =     imdilate(explant, strel('disk', round(explant_dil_value), 8));

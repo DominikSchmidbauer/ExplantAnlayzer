@@ -12,7 +12,7 @@
 %%
 clear all
 
-% Pixel/voxelsize in µm. 
+% Pixel/voxelsize in µm.
 voxel_size =        0.328;
 
 % Distance between the Sholl rings in µm.
@@ -28,19 +28,26 @@ selpath = uigetdir;
 cd(selpath)
 
 % Find all MAT files.
-listing = dir('*.mat');
+listing = dir('**/*.mat');
 
 %% Loop all MAT files
 for i = 1:size(listing,1)
     
+    % Start timer for one explant.
+    tic
+    
     % Get the name of current file.
     [~, name, ~] = fileparts(listing(i).name);
+    
+    % Go to subfolder
+    cd(listing(i).folder);
     
     % Load .mat file.
     load(listing(i).name)
     
     % Calculate basic statistics of current sample.
     Samples(i).Name =                       name;
+    Samples(i).Folder =                     listing(i).folder;
     Samples(i).Neurite_Lengths =            D;
     Samples(i).Number_of_Neurites  =        length(D);
     Samples(i).Mean_Length =                mean(D);
@@ -83,8 +90,8 @@ for i = 1:size(listing,1)
         
     end
     
-     %% Sholl analysis
-     % Performe a simple Sholl analysis.
+    %% Sholl analysis
+    % Performe a simple Sholl analysis.
     if sholl_distance > 0
         
         % Start at the centroid of the explant.
@@ -92,7 +99,7 @@ for i = 1:size(listing,1)
         y =         stats.Centroid(1);
         x =         stats.Centroid(2);
         
-        % Calculate the minimum and the maximum distance for the analysis
+        % Calculate the minimum and the maximum distance for the analysis.
         explant_boundary =  bwboundaries(explant,'noholes');
         explant_boundary =  explant_boundary{1};
         neurites_boundary = bwboundaries(neurites,'noholes');
@@ -100,21 +107,20 @@ for i = 1:size(listing,1)
         min_radius =        max(sqrt((explant_boundary(:,1) - x).^2 + (explant_boundary(:,2) - y).^2));
         max_radius =        max(sqrt((neurites_boundary(:,1) - x).^2 + (neurites_boundary(:,2) - y).^2));
         
-        % Setup
+        % Setup.
         [size_y, size_x] =              size(explant);
         [columnsInImage, rowsInImage] = meshgrid(1:size_x, 1:size_y);
         all_circles =                   logical(zeros(size(explant)));
-        
         k = 1;
         
-        % Step from min to max radius 
+        % Step from min to max radius.
         for d = min_radius : sholl_distance : max_radius
             
-            % Generate a disk with current size
+            % Generate a disk with current size.
             disk_pixels = (rowsInImage - x).^2 + (columnsInImage - y).^2 <= d.^2;
             
             % Extract boundary, remove indices ouside the image and
-            % generate a binary image of the circle
+            % generate a binary image of the circle.
             circle_pixels =             bwboundaries(disk_pixels, 4, 'noholes');
             circle_pixels =             circle_pixels{1};
             circle_pixels(circle_pixels(:,1) > size_y , :) = [];
@@ -123,7 +129,7 @@ for i = 1:size(listing,1)
             circle =                    logical(zeros(size(explant)));
             circle(circle_pixels_idx) = 1;
             
-            % Generate image with all circles
+            % Generate image with all circles.
             all_circles(circle_pixels_idx) = 1;
             
             % Find intersections of circle and neurites.
@@ -136,18 +142,27 @@ for i = 1:size(listing,1)
             k = k+1;
         end
         
-%       % Graphical output of Sholl analysis
-%         figure
-%         imshow(all_circles | neurites | explant)
+        % % Graphical output of Sholl analysis.
+        % figure
+        % imshow(all_circles | neurites | explant)
         
     end
+    
+    %Print current explant number and time.
+    fprintf(1, ['Finished explant ',num2str(i),' of ', num2str(size(listing,1)),' in ',num2str(toc),' s\n']);
     
 end
 
 %% Remove all explants with a total outgrowth less than 1 mm
 
-% idx = find(vertcat(Samples.Total_Length_G) < 1000);
-% Samples(idx) = [];
+idx = find(vertcat(Samples.Total_Length_G) < 1000);
+Samples(idx) = [];
+
+%% Excel Export
+
+cd(selpath)
+Samples_export = table({Samples.Name}.', {Samples.Folder}.', [Samples.Number_of_Neurites].', [Samples.Mean_Length].', [Samples.Median_Length].', [Samples.Max_Length].', [Samples.Number_of_Startpoints_G].', [Samples.Number_of_Startpoints_TR].', [Samples.Number_of_Branchpoints_G].', [Samples.Number_of_Branchpoints_TR].', [Samples.Total_Length_G].', [Samples.Total_Length_TR].', [Samples.Sum_Lengths_TR].', [Samples.Explant_Size].', [Samples.Hull_Area].', [Samples.Neurites_Area].', [Samples.Covered_Area].', [Samples.b3_dapi_multi_explant].', [Samples.b3_dapi_mean_explant].', [Samples.b3_sum_explant].', 'VariableNames', {'Name', 'Folder', 'Number_of_Neurites', 'Mean_Length', 'Median_Length', 'Max_Length', 'Number_of_Startpoints_G', 'Number_of_Startpoints_TR', 'Number_of_Branchpoints_G', 'Number_of_Branchpoints_TR', 'Total_Length_G', 'Total_Length_TR', 'Sum_Lengths_TR', 'Explant_Size', 'Hull_Area', 'Neurites_Area', 'Covered_Area', 'b3_dapi_multi_explant', 'b3_dapi_mean_explant', 'b3_sum_explant'});
+writetable(Samples_export,'Samples.xlsx')
 
 %%
 clearvars -except Samples
